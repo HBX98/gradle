@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-/**
- * Location information types, which could be added to a reported problem.
- */
-@NonNullApi
-package org.gradle.api.problems.locations;
+package org.gradle.api.problems.internal;
 
-import org.gradle.api.NonNullApi;
+/*
+ * Marker interface required by the build operations infrastructure.
+ */
+public interface ProblemProgressDetails {
+}

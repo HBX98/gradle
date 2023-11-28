@@ -14,24 +14,29 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems;
+package org.gradle.api.problems.internal;
 
-import org.gradle.api.Incubating;
+import org.gradle.api.problems.DocLink;
 
-/**
- * {@link Problem} instance builder requiring the specification of the problem description.
- *
- * @since 8.4
- */
-@Incubating
-public interface ProblemBuilderDefiningLabel {
+import javax.annotation.Nullable;
 
-    /**
-     * Declares a short message for this problem.
-     * @param label the short message
-     * @param args the arguments for formatting the label with {@link String#format(String, Object...)}
-     *
-     * @return the builder for the next required property
-     */
-    ProblemBuilderDefiningDocumentation label(String label, Object... args);
+public class DefaultDocLink implements DocLink {
+
+    private final String url;
+
+    public DefaultDocLink(String url) {
+        this.url = url;
+    }
+
+    @Nullable
+    @Override
+    public String getUrl() {
+        return url;
+    }
+
+    @Nullable
+    @Override
+    public String getConsultDocumentationMessage() {
+        return "For more information, please refer to " + url + ".";
+    }
 }

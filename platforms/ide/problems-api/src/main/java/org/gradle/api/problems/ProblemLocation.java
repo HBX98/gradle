@@ -18,25 +18,23 @@ package org.gradle.api.problems;
 
 import org.gradle.api.Incubating;
 
+import java.io.Serializable;
+
 /**
- * {@link Problem} instance builder requiring the specification of documentation.
+ * Represents a location information of a problem.
  *
- * @since 8.4
+ * @since 8.6
  */
 @Incubating
-public interface ProblemBuilderDefiningDocumentation {
+public interface ProblemLocation extends Serializable {
 
     /**
-     * Declares the documentation for this problem.
+     * Returns an identifier of the location type.
+     * <p>
+     * As locations will be serialized into a JSON format,
+     * this identifier is used to distinguish between different location types.
      *
-     * @return the builder for the next required property
+     * @since 8.6
      */
-    ProblemBuilderDefiningLocation documentedAt(DocLink doc);
-
-    /**
-     * Marks this problem as undocumented
-     *
-     * @return the builder for the next required property
-     */
-    ProblemBuilderDefiningLocation undocumented();
+    String getType();
 }

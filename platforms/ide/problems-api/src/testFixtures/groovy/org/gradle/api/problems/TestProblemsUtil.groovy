@@ -17,7 +17,7 @@
 package org.gradle.api.problems
 
 import org.gradle.api.problems.internal.DefaultProblems
-import org.gradle.api.problems.internal.emitters.NoOpProblemEmitter
+import org.gradle.api.problems.internal.NoOpProblemEmitter
 
 /**
  * Static util class that provides methods for creating {@link Problems} instances for testing.

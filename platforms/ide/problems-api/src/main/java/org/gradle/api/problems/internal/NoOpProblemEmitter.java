@@ -14,28 +14,13 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems;
+package org.gradle.api.problems.internal;
 
-import org.gradle.api.Incubating;
+import org.gradle.api.problems.Problem;
 
-/**
- * Problem that can be submitted for external consumption (e.g. to expose via the Tooling API).
- *
- * @since 8.4
- */
-@Incubating
-public interface ReportableProblem extends Problem {
-
-    /**
-     * Report this problem.
-     */
-    void report();
-
-    /**
-     * Creates a problem builder with values initialized from this instance.
-     *
-     * @return a builder
-     * @since 8.6
-     */
-    UnboundReportableProblemBuilder toBuilder();
+public class NoOpProblemEmitter implements ProblemEmitter {
+    @Override
+    public void emit(Problem problem) {
+        // Do nothing
+    }
 }

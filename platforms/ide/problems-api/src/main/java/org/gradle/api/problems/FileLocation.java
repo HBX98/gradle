@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems.locations;
+package org.gradle.api.problems;
 
 import org.gradle.api.Incubating;
 
@@ -23,43 +23,43 @@ import javax.annotation.Nullable;
 /**
  * A basic problem location pointing to a specific part of a file.
  *
- * @since 8.5
+ * @since 8.6
  */
 @Incubating
-public class FileLocation implements ProblemLocation {
+public interface FileLocation extends ProblemLocation {
 
-    private final String path;
-    private final Integer line;
-    private final Integer column;
-    private final Integer length;
+    /**
+     * The path to the file.
+     *
+     * @return the file path
+     * @since 8.6
+     */
+    String getPath();
 
-    public FileLocation(String path, @Nullable Integer line, @Nullable Integer column, @Nullable Integer length) {
-        this.path = path;
-        this.line = line;
-        this.column = column;
-        this.length = length;
-    }
-
-    @Override
-    public String getType() {
-        return "file";
-    }
-
-    public String getPath() {
-        return path;
-    }
+    /**
+     * The line number within the file.
+     *
+     * @return the line number
+     * @since 8.6
+     */
     @Nullable
-    public Integer getLine() {
-        return line;
-    }
+    Integer getLine();
 
+    /**
+     * The offset on the selected line.
+     *
+     * @return the column
+     * @since 8.6
+     */
     @Nullable
-    public Integer getColumn() {
-        return column;
-    }
+    Integer getColumn();
 
+    /**
+     * The content of the content starting from {@link #getColumn()}.
+     *
+     * @return the length
+     * @since 8.6
+     */
     @Nullable
-    public Integer getLength() {
-        return length;
-    }
+    Integer getLength();
 }

@@ -14,7 +14,23 @@
  * limitations under the License.
  */
 
-@NonNullApi
-package org.gradle.api.problems.internal.emitters;
+package org.gradle.api.problems;
 
-import org.gradle.api.NonNullApi;
+import org.gradle.api.Incubating;
+
+/**
+ * Plugin ID location.
+ *
+ * @since 8.6
+ */
+@Incubating
+public interface PluginIdLocation extends ProblemLocation {
+
+    /**
+     * The plugin ID.
+     *
+     * @return the plugin ID
+     * @since 8.6
+     */
+    String getPluginId();
+}

@@ -14,24 +14,30 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems;
+package org.gradle.api.problems.internal;
 
 import org.gradle.api.Incubating;
+import org.gradle.api.problems.Problem;
+import org.gradle.api.problems.Problems;
 
 /**
- * Interface for emitting problems.
+ * Describes a transformation that can be applied to a problem.
+ * <p>
+ * These transformers could be added to the {@link Problems} service to transform problems before they are reported.
  *
  * @since 8.6
  */
 @Incubating
-public interface ProblemEmitter {
+public interface ProblemTransformer {
 
     /**
-     * Emits the given problem in an implementation specific way.
+     * Transforms the given problem. The returned problem will be reported instead of the original problem.
+     * <p>
+     * Transformations do not need to create a new problem, they can also modify the given problem.
      *
-     * @param problem The problem to emit.
-     * @since 8.6
+     * @param problem the problem to transform
+     * @return the transformed problem
      */
-    void emit(Problem problem);
+    Problem transform(Problem problem);
 
 }

@@ -14,32 +14,30 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems.locations;
+package org.gradle.api.problems.internal;
 
-import org.gradle.api.Incubating;
-import org.gradle.util.Path;
+import org.gradle.api.problems.PluginIdLocation;
 
 /**
- * A problem location that stores a task path if the problem was emitted meanwhile executing a task.
+ * Represents an applied plugin ID.
  *
- * @since 8.5
+ * @since 8.6
  */
-@Incubating
-public class TaskPathLocation implements ProblemLocation {
+public class DefaultPluginIdLocation implements PluginIdLocation {
 
-    private final Path identityPath;
+    private final String pluginId;
 
-    public TaskPathLocation(Path identityPath) {
-        this.identityPath = identityPath;
+    public DefaultPluginIdLocation(String pluginId) {
+        this.pluginId = pluginId;
     }
 
     @Override
     public String getType() {
-        return "task";
+        return "pluginId";
     }
 
-    public Path getIdentityPath() {
-        return identityPath;
+    @Override
+    public String getPluginId() {
+        return pluginId;
     }
-
 }
