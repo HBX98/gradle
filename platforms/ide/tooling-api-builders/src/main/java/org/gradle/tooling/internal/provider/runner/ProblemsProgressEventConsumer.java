@@ -20,7 +20,9 @@ import org.gradle.api.NonNullApi;
 import org.gradle.api.problems.DocLink;
 import org.gradle.api.problems.Problem;
 import org.gradle.api.problems.ProblemCategory;
+import org.gradle.api.problems.ProblemAggregation;
 import org.gradle.api.problems.Severity;
+import org.gradle.api.problems.internal.DefaultProblemProgressAggregationDetails;
 import org.gradle.api.problems.internal.DefaultProblemProgressDetails;
 import org.gradle.api.problems.locations.FileLocation;
 import org.gradle.api.problems.locations.PluginIdLocation;
@@ -30,8 +32,10 @@ import org.gradle.internal.build.event.types.DefaultAdditionalData;
 import org.gradle.internal.build.event.types.DefaultDetails;
 import org.gradle.internal.build.event.types.DefaultDocumentationLink;
 import org.gradle.internal.build.event.types.DefaultFileLocation;
+import org.gradle.internal.build.event.types.DefaultInternalProblemAggregation;
 import org.gradle.internal.build.event.types.DefaultLabel;
 import org.gradle.internal.build.event.types.DefaultPluginIdLocation;
+import org.gradle.internal.build.event.types.DefaultProblemAggregationDetails;
 import org.gradle.internal.build.event.types.DefaultProblemCategory;
 import org.gradle.internal.build.event.types.DefaultProblemDescriptor;
 import org.gradle.internal.build.event.types.DefaultProblemDetails;
@@ -39,12 +43,12 @@ import org.gradle.internal.build.event.types.DefaultProblemEvent;
 import org.gradle.internal.build.event.types.DefaultSeverity;
 import org.gradle.internal.build.event.types.DefaultSolution;
 import org.gradle.internal.build.event.types.DefaultTaskPathLocation;
-import org.gradle.internal.operations.BuildOperationDescriptor;
 import org.gradle.internal.operations.BuildOperationIdFactory;
 import org.gradle.internal.operations.BuildOperationListener;
-import org.gradle.internal.operations.OperationFinishEvent;
 import org.gradle.internal.operations.OperationIdentifier;
 import org.gradle.internal.operations.OperationProgressEvent;
+import org.gradle.tooling.internal.protocol.InternalProblemAggregation;
+import org.gradle.tooling.internal.protocol.InternalProblemEvent;
 import org.gradle.tooling.internal.protocol.problem.InternalAdditionalData;
 import org.gradle.tooling.internal.protocol.problem.InternalDetails;
 import org.gradle.tooling.internal.protocol.problem.InternalDocumentationLink;
@@ -57,8 +61,13 @@ import org.gradle.tooling.internal.protocol.problem.InternalSolution;
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+
+import static com.google.common.collect.ImmutableList.toImmutableList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
 
 @NonNullApi
 public class ProblemsProgressEventConsumer extends ClientForwardingBuildOperationListener implements BuildOperationListener {
@@ -77,29 +86,72 @@ public class ProblemsProgressEventConsumer extends ClientForwardingBuildOperatio
     @Override
     public void progress(OperationIdentifier buildOperationId, OperationProgressEvent progressEvent) {
         Object details = progressEvent.getDetails();
+        createProblemEvent(buildOperationId, details)
+            .ifPresent(eventConsumer::progress);
+    }
+
+    private Optional<InternalProblemEvent> createProblemEvent(OperationIdentifier buildOperationId, @Nullable Object details) {
         if (details instanceof DefaultProblemProgressDetails) {
             Problem problem = ((DefaultProblemProgressDetails) details).getProblem();
-            eventConsumer.progress(
-                new DefaultProblemEvent(
-                    new DefaultProblemDescriptor(
-                        new OperationIdentifier(
-                            idFactory.nextId()
-                        ),
-                        buildOperationId),
-                    new DefaultProblemDetails(
-                        toInternalCategory(problem.getProblemCategory()),
-                        toInternalLabel(problem.getLabel()),
-                        toInternalDetails(problem.getDetails()),
-                        toInternalSeverity(problem.getSeverity()),
-                        toInternalLocations(problem.getLocations()),
-                        toInternalDocumentationLink(problem.getDocumentationLink()),
-                        toInternalSolutions(problem.getSolutions()),
-                        toInternalAdditionalData(problem.getAdditionalData()),
-                        problem.getException()
-                    )
-                )
-            );
+            return of(createProblemEvent(buildOperationId, problem));
+        } else if (details instanceof DefaultProblemProgressAggregationDetails) {
+            return of(createProblemAggregationEvent(buildOperationId, (DefaultProblemProgressAggregationDetails) details));
         }
+        return empty();
+    }
+
+    private DefaultProblemEvent createProblemAggregationEvent(OperationIdentifier buildOperationId, DefaultProblemProgressAggregationDetails details) {
+        //TODO (reinhold) aggregate/composite/collection/summary problems? might be a bit better
+        return new DefaultProblemEvent(
+            cerateDefaultProblemDescriptor(buildOperationId),
+            new DefaultProblemAggregationDetails(createInternalSummaries(details)));
+    }
+
+    private static List<InternalProblemAggregation> createInternalSummaries(DefaultProblemProgressAggregationDetails details) {
+        return details.getAggregations()
+            .stream()
+            .map(ProblemsProgressEventConsumer::createInternalSummary)
+            .collect(toImmutableList());
+    }
+
+    private OperationIdentifier createNewOperationIdentifier() {
+        return new OperationIdentifier(idFactory.nextId());
+    }
+
+    private static DefaultInternalProblemAggregation createInternalSummary(ProblemAggregation summary) {
+        return new DefaultInternalProblemAggregation(
+            toInternalCategory(summary.getProblemCategory()),
+            toInternalLabel(summary.getLabel()),
+            toInternalDetails(summary.getDetails()),
+            toInternalSeverity(summary.getSeverity()),
+            toInternalLocations(summary.getLocations()),
+            toInternalDocumentationLink(summary.getDocumentationLink()),
+            toInternalSolutions(summary.getSolutions()),
+            toInternalAdditionalData(summary.getAdditionalData()),
+            summary.getCount());
+    }
+
+    private DefaultProblemEvent createProblemEvent(OperationIdentifier buildOperationId, Problem problem) {
+        return new DefaultProblemEvent(
+            cerateDefaultProblemDescriptor(buildOperationId),
+            new DefaultProblemDetails(
+                toInternalCategory(problem.getProblemCategory()),
+                toInternalLabel(problem.getLabel()),
+                toInternalDetails(problem.getDetails()),
+                toInternalSeverity(problem.getSeverity()),
+                toInternalLocations(problem.getLocations()),
+                toInternalDocumentationLink(problem.getDocumentationLink()),
+                toInternalSolutions(problem.getSolutions()),
+                toInternalAdditionalData(problem.getAdditionalData()),
+                problem.getException()
+            )
+        );
+    }
+
+    private DefaultProblemDescriptor cerateDefaultProblemDescriptor(OperationIdentifier buildOperationId) {
+        return new DefaultProblemDescriptor(
+            createNewOperationIdentifier(),
+            buildOperationId);
     }
 
     private static InternalProblemCategory toInternalCategory(ProblemCategory category) {
@@ -116,10 +168,14 @@ public class ProblemsProgressEventConsumer extends ClientForwardingBuildOperatio
 
     private static InternalSeverity toInternalSeverity(Severity severity) {
         switch (severity) {
-            case ADVICE: return ADVICE;
-            case WARNING: return WARNING;
-            case ERROR: return ERROR;
-            default: throw new RuntimeException("No mapping defined for severity level " + severity);
+            case ADVICE:
+                return ADVICE;
+            case WARNING:
+                return WARNING;
+            case ERROR:
+                return ERROR;
+            default:
+                throw new RuntimeException("No mapping defined for severity level " + severity);
         }
     }
 
@@ -137,30 +193,29 @@ public class ProblemsProgressEventConsumer extends ClientForwardingBuildOperatio
             } else {
                 throw new RuntimeException("No mapping defined for " + location.getClass().getName());
             }
-        }).collect(Collectors.toList());
+        }).collect(toImmutableList());
     }
 
-    private static @Nullable InternalDocumentationLink toInternalDocumentationLink(@Nullable DocLink link) {
+    @Nullable
+    private static InternalDocumentationLink toInternalDocumentationLink(@Nullable DocLink link) {
         return (link == null || link.getUrl() == null) ? null : new DefaultDocumentationLink(link.getUrl());
     }
 
     private static List<InternalSolution> toInternalSolutions(List<String> solutions) {
-        return solutions.stream().map(DefaultSolution::new).collect(Collectors.toList());
+        return solutions.stream()
+            .map(DefaultSolution::new)
+            .collect(toImmutableList());
     }
 
     private static InternalAdditionalData toInternalAdditionalData(Map<String, Object> additionalData) {
         return new DefaultAdditionalData(
-            additionalData.entrySet().stream().filter(entry -> isSupportedType(entry.getValue())).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+            additionalData.entrySet().stream()
+                .filter(entry -> isSupportedType(entry.getValue()))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue))
         );
     }
 
     private static boolean isSupportedType(Object type) {
         return type instanceof String;
     }
-
-    @Override
-    public void finished(BuildOperationDescriptor buildOperation, OperationFinishEvent result) {
-        super.finished(buildOperation, result);
-    }
-
 }

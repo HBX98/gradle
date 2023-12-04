@@ -14,22 +14,13 @@
  * limitations under the License.
  */
 
-package org.gradle.tooling.events.problems.internal;
+package org.gradle.tooling.internal.protocol;
 
 import org.gradle.api.NonNullApi;
-import org.gradle.tooling.events.internal.BaseProgressEvent;
-import org.gradle.tooling.events.problems.ProblemCommonDescriptor;
-import org.gradle.tooling.events.problems.ProblemEvent;
+
+import java.util.List;
 
 @NonNullApi
-public class DefaultProblemEvent extends BaseProgressEvent implements ProblemEvent {
-    public DefaultProblemEvent(long eventTime, ProblemCommonDescriptor problemDescriptor) {
-        super(eventTime, problemDescriptor.getDisplayName(), problemDescriptor);
-    }
-
-    @Override
-    public ProblemCommonDescriptor getDescriptor() {
-        return (ProblemCommonDescriptor) super.getDescriptor();
-    }
-
+public interface InternalProblemAggregationDetails extends InternalProblemDetails {
+    List<InternalProblemAggregation> getSummaries();
 }

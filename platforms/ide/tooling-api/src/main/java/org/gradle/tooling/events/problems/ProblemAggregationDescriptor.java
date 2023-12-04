@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems
+package org.gradle.tooling.events.problems;
 
-import org.gradle.api.problems.internal.DefaultProblems
-import org.gradle.api.problems.internal.NoOpProblemEmitter
+import org.gradle.api.Incubating;
+
+import java.util.List;
 
 /**
- * Static util class that provides methods for creating {@link Problems} instances for testing.
+ * Describes a problem summary
+ *
+ * @since 8.6
  */
-abstract class TestProblemsUtil {
-    private TestProblemsUtil() { /* not instantiable */ }
+@Incubating
+public interface ProblemAggregationDescriptor extends ProblemCommonDescriptor {
 
     /**
-     * Creates a new {@link Problems} instance that does not report problems as build operation events.
+     * Returns the problem summary details.
      *
-     * @return the problems instance
+     * @return The problem summary details.
      */
-    public static Problems createTestProblems() {
-       return new DefaultProblems(new NoOpProblemEmitter())
-    }
+    List<ProblemAggregation> getSummaries();
 }

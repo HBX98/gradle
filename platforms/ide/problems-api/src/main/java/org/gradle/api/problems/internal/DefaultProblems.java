@@ -17,26 +17,21 @@
 package org.gradle.api.problems.internal;
 
 import org.gradle.api.problems.Problem;
+import org.gradle.api.problems.ProblemAggregation;
 import org.gradle.api.problems.ProblemBuilder;
 import org.gradle.api.problems.ProblemBuilderSpec;
-import org.gradle.api.problems.ProblemEmitter;
 import org.gradle.api.problems.ProblemTransformer;
 import org.gradle.api.problems.ReportableProblem;
-import org.gradle.internal.concurrent.Stoppable;
 import org.gradle.internal.service.scopes.Scopes;
 import org.gradle.internal.service.scopes.ServiceScope;
 
+import java.io.File;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static com.google.common.collect.Lists.newArrayList;
 
 @ServiceScope(Scopes.BuildTree.class)
-public class DefaultProblems implements InternalProblems, Stoppable {
-    private ProblemEmitter emitter;
+public class DefaultProblems implements InternalProblems {
+    private final DeduplicationProblemEmitter deduplicationProblemEmitter;
     private final List<ProblemTransformer> transformers;
 
     public DefaultProblems(ProblemEmitter emitter) {
@@ -44,12 +39,12 @@ public class DefaultProblems implements InternalProblems, Stoppable {
     }
 
     public DefaultProblems(ProblemEmitter emitter, List<ProblemTransformer> transformers) {
-        this.emitter = emitter;
+        this.deduplicationProblemEmitter = new DeduplicationProblemEmitter(emitter);
         this.transformers = transformers;
     }
 
     public void setEmitter(ProblemEmitter emitter) {
-        this.emitter = emitter;
+        this.deduplicationProblemEmitter.setEmitter(emitter);
     }
 
     @Override
@@ -89,7 +84,6 @@ public class DefaultProblems implements InternalProblems, Stoppable {
         throw exception;
     }
 
-    private final Map<String, List<Problem>> seenProblems = new HashMap<String, List<Problem>>();
     @Override
     public void report(Problem problem) {
         // Transform the problem with all registered transformers
@@ -97,28 +91,21 @@ public class DefaultProblems implements InternalProblems, Stoppable {
             problem = transformer.transform(problem);
         }
 
-        String deduplicationKey = problem.getProblemCategory().getCategory() + ";" + problem.getLabel();
-        List<Problem> seenProblem = seenProblems.get(deduplicationKey);
-        if(seenProblem != null) {
-            seenProblem.add(problem);
-            return;
-        }
-
-        seenProblems.put(deduplicationKey, newArrayList(problem));
-
-        emitter.emit(problem);
+        deduplicationProblemEmitter.emit(problem);
     }
 
     @Override
-    public void stop() {
+    public void reportSummaries(List<ProblemAggregation> summaries) {
+        deduplicationProblemEmitter.emit(summaries);
+    }
 
-//        buildOperationProgressEventEmitter.emitNowIfCurrent(new DefaultProblemProgressDetails(problem));
-        Set<Map.Entry<String, List<Problem>>> entries = seenProblems.entrySet();
-//        for(Map.Entry<String, List<Problem>> seenProblem : entries){
-//            for(Problem problem : seenProblem.getValue()) {
-////                System.out.println("Problem: " + problem.getLabel());
-//            }
-//        }
-//        emitter.emit(entries.iterator().next().getValue().get(0));
+    @Override
+    public String getId() {
+        return "problems";
+    }
+
+    @Override
+    public void report(File reportDir, ProblemConsumer validationFailures) {
+        deduplicationProblemEmitter.report(reportDir, validationFailures);
     }
 }

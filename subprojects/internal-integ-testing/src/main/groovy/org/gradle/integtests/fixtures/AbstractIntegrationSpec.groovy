@@ -19,6 +19,7 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.Config
 import org.gradle.api.Action
 import org.gradle.api.internal.DocumentationRegistry
+import org.gradle.api.problems.internal.DefaultProblemProgressAggregationDetails
 import org.gradle.api.problems.internal.DefaultProblemProgressDetails
 import org.gradle.integtests.fixtures.build.BuildTestFile
 import org.gradle.integtests.fixtures.build.BuildTestFixture
@@ -762,6 +763,19 @@ tmpdir is currently ${System.getProperty("java.io.tmpdir")}""")
             it.progress(DefaultProblemProgressDetails.class)
         }.collect {
             it.details["problem"]
+        }
+    }
+
+    List<Map<String, Object>> getCollectedProblemSummaries() {
+        if (!enableProblemsApiCheck) {
+            throw new IllegalStateException('Problems API check is not enabled')
+        }
+
+        def all = buildOperationsFixture.all()
+        return all.collectMany {
+            it.progress(DefaultProblemProgressAggregationDetails.class)
+        }.collect {
+            it.details
         }
     }
 

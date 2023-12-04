@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems.internal.emitters;
+package org.gradle.operations.problem;
 
-import org.gradle.api.problems.Problem;
-import org.gradle.api.problems.ProblemEmitter;
+import org.gradle.api.Incubating;
+import org.gradle.api.NonNullApi;
 
-public class NoOpProblemEmitter implements ProblemEmitter {
-    @Override
-    public void emit(Problem problem) {
-        // Do nothing
-    }
+/**
+ * Represents a reported problem in the build.
+ *
+ * @since 8.6
+ */
+@Incubating
+@NonNullApi
+public interface ProblemAggregationDetails {
 }

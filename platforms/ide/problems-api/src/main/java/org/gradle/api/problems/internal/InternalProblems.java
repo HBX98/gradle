@@ -19,10 +19,14 @@ package org.gradle.api.problems.internal;
 import org.gradle.api.problems.BasicProblemBuilder;
 import org.gradle.api.problems.Problem;
 import org.gradle.api.problems.ProblemBuilderDefiningLabel;
+import org.gradle.api.problems.ProblemAggregation;
 import org.gradle.api.problems.Problems;
 import org.gradle.api.problems.ReportableProblem;
+import org.gradle.problems.buildtree.ProblemReporter;
 
-public interface InternalProblems extends Problems {
+import java.util.List;
+
+public interface InternalProblems extends Problems, ProblemReporter {
 
     /**
      * Returns a new problem builder which can configure and create Problem instances.
@@ -36,4 +40,6 @@ public interface InternalProblems extends Problems {
      */
     ProblemBuilderDefiningLabel createProblemBuilder();
     void report(Problem problem);
+
+    void reportSummaries(List<ProblemAggregation> summaries);
 }

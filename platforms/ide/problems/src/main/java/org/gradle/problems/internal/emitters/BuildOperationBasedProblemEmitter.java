@@ -17,13 +17,17 @@
 package org.gradle.problems.internal.emitters;
 
 import org.gradle.api.Incubating;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.problems.Problem;
-import org.gradle.api.problems.ProblemEmitter;
+import org.gradle.api.problems.ProblemAggregation;
 import org.gradle.api.problems.internal.DefaultProblem;
+import org.gradle.api.problems.internal.DefaultProblemProgressAggregationDetails;
 import org.gradle.api.problems.internal.DefaultProblemProgressDetails;
+import org.gradle.api.problems.internal.ProblemEmitter;
 import org.gradle.internal.operations.BuildOperationProgressEventEmitter;
+import org.gradle.internal.operations.BuildOperationRef;
+import org.gradle.internal.operations.CurrentBuildOperationRef;
+
+import java.util.List;
 
 /**
  * Emits problems as build operation progress events.
@@ -33,7 +37,7 @@ import org.gradle.internal.operations.BuildOperationProgressEventEmitter;
 @Incubating
 public class BuildOperationBasedProblemEmitter implements ProblemEmitter {
 
-    private static final Logger LOGGER = Logging.getLogger(BuildOperationBasedProblemEmitter.class);
+//    private static final Logger LOGGER = Logging.getLogger(BuildOperationBasedProblemEmitter.class);
 
     private final BuildOperationProgressEventEmitter eventEmitter;
 
@@ -58,5 +62,14 @@ public class BuildOperationBasedProblemEmitter implements ProblemEmitter {
                 // LOGGER.error("Problem '{}' is not associated with a build operation, it will not be reported", problem.getLabel());
             // }
         }
+    }
+
+    @Override
+    public void emit(List<ProblemAggregation> summaries) {
+        BuildOperationRef currentBuildOperation = CurrentBuildOperationRef.instance().get();
+        if(currentBuildOperation == null) {
+            throw new IllegalStateException("Cannot emit problem summaries without a current build operation");
+        }
+        eventEmitter.emitNow(currentBuildOperation.getId(), new DefaultProblemProgressAggregationDetails(summaries));
     }
 }

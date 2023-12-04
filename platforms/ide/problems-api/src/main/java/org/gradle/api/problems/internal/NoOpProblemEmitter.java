@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems
+package org.gradle.api.problems.internal;
 
-import org.gradle.api.problems.internal.DefaultProblems
-import org.gradle.api.problems.internal.NoOpProblemEmitter
+import org.gradle.api.problems.Problem;
+import org.gradle.api.problems.ProblemAggregation;
 
-/**
- * Static util class that provides methods for creating {@link Problems} instances for testing.
- */
-abstract class TestProblemsUtil {
-    private TestProblemsUtil() { /* not instantiable */ }
+import java.util.List;
 
-    /**
-     * Creates a new {@link Problems} instance that does not report problems as build operation events.
-     *
-     * @return the problems instance
-     */
-    public static Problems createTestProblems() {
-       return new DefaultProblems(new NoOpProblemEmitter())
+public class NoOpProblemEmitter implements ProblemEmitter {
+    @Override
+    public void emit(Problem problem) {
+        // Do nothing
+    }
+
+    @Override
+    public void emit(List<ProblemAggregation> summaries) {
+        // Do nothing
     }
 }

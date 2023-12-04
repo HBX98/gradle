@@ -180,6 +180,53 @@ class ProblemProgressEventCrossVersionTest extends ToolingApiSpecification {
         ''                         | null            | '.undocumented()'                                            | null
     }
 
+    @ToolingApiVersion(">=8.6")
+    def "Problems expose summary Tooling API events"() {
+        given:
+        buildFile << """
+            import org.gradle.api.problems.Problem
+            import org.gradle.api.problems.Severity
+
+            abstract class ProblemReportingTask extends DefaultTask {
+                @Inject
+                protected abstract Problems getProblems();
+
+                @TaskAction
+                void run() {
+                    for(int i = 0; i < 10; i++) {
+                        problems.create(problem -> problem
+                                .label("The 'standard-plugin' is deprecated")
+                                .undocumented()
+                                .noLocation()
+                                .category("deprecation", "plugin")
+                                .severity(Severity.WARNING)
+                                .solution("Please use 'standard-plugin-2' instead of this plugin")
+                        ).report()
+                    }
+                 }
+            }
+
+            tasks.register("reportProblem", ProblemReportingTask)
+        """
+        ProblemProgressListener listener = new ProblemProgressListener()
+
+        when:
+        withConnection { connection ->
+            connection.newBuild().forTasks('reportProblem')
+                .addProgressListener(listener)
+                .run()
+        }
+
+        then:
+        def problems = listener.problems
+        problems.size() == 2
+
+        problems[0].label.label == "The 'standard-plugin' is deprecated"
+        problems[0].details.details == null
+        problems[1].summaries.size() == 1
+        problems[1].summaries[0].label.label == "The 'standard-plugin' is deprecated"
+    }
+
     class ProblemProgressListener implements ProgressListener {
 
         List<ProblemDescriptor> problems = []

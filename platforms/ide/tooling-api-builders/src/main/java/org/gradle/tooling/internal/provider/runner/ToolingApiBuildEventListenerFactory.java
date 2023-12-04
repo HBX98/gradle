@@ -18,6 +18,7 @@ package org.gradle.tooling.internal.provider.runner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import org.gradle.api.NonNullApi;
 import org.gradle.initialization.BuildEventConsumer;
 import org.gradle.internal.build.event.BuildEventListenerFactory;
 import org.gradle.internal.build.event.BuildEventSubscriptions;
@@ -38,6 +39,7 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 
+@NonNullApi
 public class ToolingApiBuildEventListenerFactory implements BuildEventListenerFactory {
     private final BuildOperationAncestryTracker ancestryTracker;
     private final BuildOperationIdFactory idFactory;

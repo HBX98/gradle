@@ -14,24 +14,16 @@
  * limitations under the License.
  */
 
-package org.gradle.api.problems;
+package org.gradle.tooling.events.problems;
 
 import org.gradle.api.Incubating;
+import org.gradle.tooling.events.OperationDescriptor;
 
 /**
- * Interface for emitting problems.
+ * Represents a reported problems summary.
  *
  * @since 8.6
  */
 @Incubating
-public interface ProblemEmitter {
-
-    /**
-     * Emits the given problem in an implementation specific way.
-     *
-     * @param problem The problem to emit.
-     * @since 8.6
-     */
-    void emit(Problem problem);
-
+public interface ProblemCommonDescriptor extends OperationDescriptor {
 }

@@ -536,13 +536,12 @@ class ProblemsServiceIntegrationTest extends AbstractIntegrationSpec {
                 @TaskAction
                 void run() {
                     try {
-                        def exception = new RuntimeException("test")
                         problems.throwing { spec -> spec
                             .label("inner")
                             .undocumented()
                             .noLocation()
                             .category("type")
-                            .withException(exception)
+                            .withException(new RuntimeException("test"))
                         }
                     } catch (RuntimeException ex) {
                         problems.rethrowing(ex) { spec -> spec
@@ -563,5 +562,40 @@ class ProblemsServiceIntegrationTest extends AbstractIntegrationSpec {
         this.collectedProblems.size() == 2
         this.collectedProblems[0]["label"] == "inner"
         this.collectedProblems[1]["label"] == "outer"
+    }
+
+    def "deduplicate"() {
+        given:
+        buildFile """
+            abstract class ProblemReportingTask extends DefaultTask {
+                @Inject
+                protected abstract Problems getProblems();
+
+                @TaskAction
+                void run() {
+                    for (int i = 0; i < 10; i++) {
+                        problems.create(problem -> problem
+                                .label("The 'standard-plugin' is deprecated")
+                                .undocumented()
+                                .noLocation()
+                                .category("deprecation", "plugin")
+                                .severity(Severity.WARNING)
+                                .solution("Please use 'standard-plugin-2' instead of this plugin")
+                        ).report()
+                    }
+                }
+            }
+            """
+
+        when:
+        run("reportProblem")
+
+
+        then:
+        def problems = this.collectedProblems
+        problems.size() == 1
+
+        def summaries = this.collectedProblemSummaries
+        summaries.size() == 1
     }
 }

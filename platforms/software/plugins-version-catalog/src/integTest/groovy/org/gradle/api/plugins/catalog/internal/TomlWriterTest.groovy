@@ -24,7 +24,7 @@ import org.gradle.api.internal.catalog.DefaultVersionCatalogBuilder
 import org.gradle.api.internal.catalog.parser.TomlCatalogFileParser
 import org.gradle.api.problems.Problems
 import org.gradle.api.problems.internal.DefaultProblems
-import org.gradle.api.problems.internal.emitters.NoOpProblemEmitter
+import org.gradle.api.problems.internal.NoOpProblemEmitter
 import org.gradle.util.TestUtil
 import spock.lang.Specification
 import spock.lang.TempDir

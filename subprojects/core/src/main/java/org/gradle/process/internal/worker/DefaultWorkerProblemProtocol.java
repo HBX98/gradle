@@ -17,10 +17,13 @@
 package org.gradle.process.internal.worker;
 
 import org.gradle.api.NonNullApi;
+import org.gradle.api.problems.ProblemAggregation;
 import org.gradle.api.problems.internal.DefaultProblem;
 import org.gradle.api.problems.internal.InternalProblems;
 import org.gradle.api.problems.internal.ProblemsProgressEventEmitterHolder;
 import org.gradle.process.internal.worker.problem.WorkerProblemProtocol;
+
+import java.util.List;
 
 @NonNullApi
 public class DefaultWorkerProblemProtocol implements WorkerProblemProtocol {
@@ -29,6 +32,12 @@ public class DefaultWorkerProblemProtocol implements WorkerProblemProtocol {
     public void reportProblem(DefaultProblem problem) {
         InternalProblems problemService = (InternalProblems) ProblemsProgressEventEmitterHolder.get();
         problemService.report(problem);
+    }
+
+    @Override
+    public void reportSummaries(List<ProblemAggregation> summaries) {
+        InternalProblems problemService = (InternalProblems) ProblemsProgressEventEmitterHolder.get();
+        problemService.reportSummaries(summaries);
     }
 
 }
