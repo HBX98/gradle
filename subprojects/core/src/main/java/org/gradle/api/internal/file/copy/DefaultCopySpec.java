@@ -40,8 +40,6 @@ import org.gradle.api.file.RelativePath;
 import org.gradle.api.internal.file.DefaultConfigurableFilePermissions;
 import org.gradle.api.internal.file.FileCollectionFactory;
 import org.gradle.api.internal.file.FileTreeInternal;
-import org.gradle.api.internal.file.archive.TarFileTree;
-import org.gradle.api.internal.file.archive.ZipFileTree;
 import org.gradle.api.internal.file.collections.FileTreeAdapter;
 import org.gradle.api.internal.file.collections.MinimalFileTree;
 import org.gradle.api.internal.file.pattern.PatternMatcher;
@@ -606,7 +604,7 @@ public class DefaultCopySpec implements CopySpecInternal {
         for (Object sourcePath : sourcePaths.getFrom()) {
             if (sourcePath instanceof FileTreeAdapter) {
                 MinimalFileTree tree = ((FileTreeAdapter) sourcePath).getTree();
-                if (tree instanceof ZipFileTree || tree instanceof TarFileTree) {
+                if (tree.isArchive()) {
                     return LinksStrategy.PRESERVE_RELATIVE;
                 }
             }
