@@ -601,17 +601,17 @@ public class DefaultCopySpec implements CopySpecInternal {
 
     @Override
     public LinksStrategy getDefaultLinksStrategy() {
+        for (CopySpecInternal child : childSpecs) {
+            if (child.getDefaultLinksStrategy() == LinksStrategy.PRESERVE_RELATIVE) {
+                return LinksStrategy.PRESERVE_RELATIVE;
+            }
+        }
         for (Object sourcePath : sourcePaths.getFrom()) {
             if (sourcePath instanceof FileTreeAdapter) {
                 MinimalFileTree tree = ((FileTreeAdapter) sourcePath).getTree();
                 if (tree.isArchive()) {
                     return LinksStrategy.PRESERVE_RELATIVE;
                 }
-            }
-        }
-        for (CopySpecInternal child : childSpecs) {
-            if (child.getDefaultLinksStrategy() == LinksStrategy.PRESERVE_RELATIVE) {
-                return LinksStrategy.PRESERVE_RELATIVE;
             }
         }
         return LinksStrategy.FOLLOW;
