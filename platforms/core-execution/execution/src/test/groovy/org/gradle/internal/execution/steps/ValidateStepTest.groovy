@@ -17,9 +17,7 @@
 package org.gradle.internal.execution.steps
 
 import org.gradle.api.problems.Problem
-import org.gradle.api.problems.Problems
 import org.gradle.api.problems.Severity
-import org.gradle.api.problems.internal.DefaultProblems
 import org.gradle.internal.execution.WorkValidationContext
 import org.gradle.internal.execution.WorkValidationException
 import org.gradle.internal.execution.WorkValidationExceptionChecker
@@ -30,21 +28,21 @@ import org.gradle.internal.vfs.VirtualFileSystem
 
 import static com.google.common.collect.ImmutableList.of
 import static org.gradle.integtests.fixtures.validation.ValidationProblemPropertyAnnotationHandler.TEST_PROBLEM
+import static org.gradle.internal.RenderingUtils.oxfordListOf
 import static org.gradle.internal.deprecation.Documentation.userManual
 import static org.gradle.internal.reflect.validation.TypeValidationProblemRenderer.convertToSingleLine
 import static org.gradle.internal.reflect.validation.TypeValidationProblemRenderer.renderMinimalInformationAbout
-import static org.gradle.internal.RenderingUtils.oxfordListOf
 
 class ValidateStepTest extends StepSpec<BeforeExecutionContext> implements ValidationMessageChecker {
 
     def warningReporter = Mock(ValidateStep.ValidationWarningRecorder)
     def virtualFileSystem = Mock(VirtualFileSystem)
-    def emitter = Mock(BuildOperationProgressEventEmitter)
-    def step = new ValidateStep<>(virtualFileSystem, warningReporter, new DefaultProblems(emitter), delegate)
+    def buildOperationProgressEventEmitter = Mock(BuildOperationProgressEventEmitter)
+    def step = new ValidateStep<>(virtualFileSystem, warningReporter, delegate)
     def delegateResult = Mock(Result)
 
     def setup() {
-        def validationContext = new DefaultWorkValidationContext(WorkValidationContext.TypeOriginInspector.NO_OP, Stub(Problems))
+        def validationContext = new DefaultWorkValidationContext(WorkValidationContext.TypeOriginInspector.NO_OP)
         context.getValidationContext() >> validationContext
     }
 
@@ -89,7 +87,7 @@ class ValidateStepTest extends StepSpec<BeforeExecutionContext> implements Valid
             }
         }
         0 * _
-        _ * emitter.emitNowIfCurrent(_ as Object) >> {}
+        _ * buildOperationProgressEventEmitter.emitNowIfCurrent(_ as Object) >> {}
     }
 
     def "fails when there are multiple violations"() {
@@ -130,7 +128,7 @@ class ValidateStepTest extends StepSpec<BeforeExecutionContext> implements Valid
             }
         }
         0 * _
-        _ * emitter.emitNowIfCurrent(_ as Object) >> {}
+        _ * buildOperationProgressEventEmitter.emitNowIfCurrent(_ as Object) >> {}
     }
 
     def "reports deprecation warning and invalidates VFS for validation warning"() {
@@ -153,7 +151,7 @@ class ValidateStepTest extends StepSpec<BeforeExecutionContext> implements Valid
         }
 
         then:
-        _ * emitter.emitNowIfCurrent(_ as Object) >> {}
+        _ * buildOperationProgressEventEmitter.emitNowIfCurrent(_ as Object) >> {}
         1 * warningReporter.recordValidationWarnings(work, { List<Problem> warnings ->
             convertToSingleLine(renderMinimalInformationAbout(warnings.first(), false, false)) == expectedWarning
         })
@@ -201,7 +199,7 @@ class ValidateStepTest extends StepSpec<BeforeExecutionContext> implements Valid
         }
 
         then:
-        _ * emitter.emitNowIfCurrent(_ as Object) >> {}
+        _ * buildOperationProgressEventEmitter.emitNowIfCurrent(_ as Object) >> {}
         1 * warningReporter.recordValidationWarnings(work, { warnings -> convertToSingleLine(renderMinimalInformationAbout(warnings.first(), true, false)) == expectedWarning })
 
         then:
