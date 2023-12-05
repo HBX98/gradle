@@ -379,10 +379,18 @@ public class TarFileTree extends AbstractArchiveFileTree {
         DetailsImpl createDetails(
             TarArchiveEntry tarArchiveEntry,
             String targetPath,
-            @Nullable ArchiveSymbolicLinkDetails<TarArchiveEntry> linkDetails,
+            ArchiveSymbolicLinkDetails<TarArchiveEntry> linkDetails,
             boolean preserveLink
         ) {
             return new DetailsImpl(this, tarArchiveEntry, targetPath, linkDetails, preserveLink);
+        }
+
+        @Override
+        DetailsImpl createDetails(
+            TarArchiveEntry tarArchiveEntry,
+            String targetPath
+        ) {
+            return new DetailsImpl(this, tarArchiveEntry, targetPath);
         }
     }
 
@@ -393,10 +401,18 @@ public class TarFileTree extends AbstractArchiveFileTree {
             TarVisitor tarMetadata,
             TarArchiveEntry entry,
             String targetPath,
-            @Nullable ArchiveSymbolicLinkDetails<TarArchiveEntry> linkDetails,
+            ArchiveSymbolicLinkDetails<TarArchiveEntry> linkDetails,
             boolean preserveLink
         ) {
             super(tarMetadata, entry, targetPath, linkDetails, preserveLink);
+        }
+
+        public DetailsImpl(
+            TarVisitor tarMetadata,
+            TarArchiveEntry entry,
+            String targetPath
+        ) {
+            super(tarMetadata, entry, targetPath);
         }
 
         @Override

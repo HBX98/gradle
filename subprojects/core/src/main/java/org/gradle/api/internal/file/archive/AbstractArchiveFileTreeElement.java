@@ -47,7 +47,7 @@ public abstract class AbstractArchiveFileTreeElement<ENTRY, METADATA extends Arc
         METADATA archiveMetadata,
         ENTRY entry,
         String targetPath,
-        @Nullable ArchiveSymbolicLinkDetails<ENTRY> linkDetails,
+        ArchiveSymbolicLinkDetails<ENTRY> linkDetails,
         boolean preserveLink
     ) {
         super(archiveMetadata.chmod);
@@ -57,6 +57,20 @@ public abstract class AbstractArchiveFileTreeElement<ENTRY, METADATA extends Arc
         this.preserveLink = preserveLink;
         this.targetPath = targetPath;
         this.resultEntry = getResultEntry();
+    }
+
+    protected AbstractArchiveFileTreeElement(
+        METADATA archiveMetadata,
+        ENTRY entry,
+        String targetPath
+    ) {
+        super(archiveMetadata.chmod);
+        this.entry = entry;
+        this.archiveMetadata = archiveMetadata;
+        this.linkDetails = null;
+        this.preserveLink = false;
+        this.targetPath = targetPath;
+        this.resultEntry = entry;
     }
 
     protected ENTRY getResultEntry() {

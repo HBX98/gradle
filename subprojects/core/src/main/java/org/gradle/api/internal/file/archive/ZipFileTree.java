@@ -182,10 +182,18 @@ public class ZipFileTree extends AbstractArchiveFileTree {
         DetailsImpl createDetails(
             ZipArchiveEntry zipArchiveEntry,
             String targetPath,
-            @Nullable ArchiveSymbolicLinkDetails<ZipArchiveEntry> linkDetails,
+            ArchiveSymbolicLinkDetails<ZipArchiveEntry> linkDetails,
             boolean preserveLink
         ) {
             return new DetailsImpl(this, zipArchiveEntry, targetPath, linkDetails, preserveLink);
+        }
+
+        @Override
+        DetailsImpl createDetails(
+            ZipArchiveEntry zipArchiveEntry,
+            String targetPath
+        ) {
+            return new DetailsImpl(this, zipArchiveEntry, targetPath);
         }
     }
 
@@ -195,10 +203,18 @@ public class ZipFileTree extends AbstractArchiveFileTree {
             ZipVisitor zipMetadata,
             ZipArchiveEntry entry,
             String targetPath,
-            @Nullable ArchiveSymbolicLinkDetails<ZipArchiveEntry> linkDetails,
+            ArchiveSymbolicLinkDetails<ZipArchiveEntry> linkDetails,
             boolean preserveLink
         ) {
             super(zipMetadata, entry, targetPath, linkDetails, preserveLink);
+        }
+
+        public DetailsImpl(
+            ZipVisitor zipMetadata,
+            ZipArchiveEntry entry,
+            String targetPath
+        ) {
+            super(zipMetadata, entry, targetPath);
         }
 
         @Override

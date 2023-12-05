@@ -78,12 +78,17 @@ public abstract class ArchiveVisitor<ENTRY> {
     abstract AbstractArchiveFileTreeElement<ENTRY, ? extends ArchiveVisitor<ENTRY>> createDetails(
         ENTRY entry,
         String targetPath,
-        @Nullable ArchiveSymbolicLinkDetails<ENTRY> linkDetails,
+        ArchiveSymbolicLinkDetails<ENTRY> linkDetails,
         boolean preserveLink
     );
 
+    abstract AbstractArchiveFileTreeElement<ENTRY, ? extends ArchiveVisitor<ENTRY>> createDetails(
+        ENTRY entry,
+        String targetPath
+    );
+
     public void visitAll() throws IOException {
-        for (Iterator<ENTRY> it = getEntries().values().iterator(); it.hasNext() && !stopFlag.get();) {
+        for (Iterator<ENTRY> it = getEntries().values().iterator(); it.hasNext() && !stopFlag.get(); ) {
             ENTRY entry = it.next();
             visitEntry(entry, safePathName(getPath(entry)), false);
         }
@@ -136,7 +141,7 @@ public abstract class ArchiveVisitor<ENTRY> {
 
     protected void visitEntry(ENTRY entry, String targetPath, boolean extract) {
         if (!isSymlink(entry)) {
-            FileVisitDetails details = createDetails(entry, targetPath, null, false);
+            FileVisitDetails details = createDetails(entry, targetPath);
             if (isDirectory(entry)) {
                 visitor.visitDir(details);
             } else {
