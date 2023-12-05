@@ -16,9 +16,7 @@
 
 package org.gradle.api.internal.file.archive;
 
-import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.FileVisitor;
-import org.gradle.api.file.LinksStrategy;
 import org.gradle.internal.file.Chmod;
 
 import javax.annotation.Nullable;
@@ -38,9 +36,9 @@ public abstract class ArchiveVisitor<ENTRY> {
     protected final File expandedDir;
     private final FileVisitor visitor;
     protected final AtomicBoolean stopFlag;
-    private final LinksStrategy linksStrategy;
     protected final Chmod chmod;
     protected TreeMap<String, ENTRY> entries = null;
+    protected final boolean preserveLinks;
 
     ArchiveVisitor(
         File originalFile,
@@ -53,7 +51,7 @@ public abstract class ArchiveVisitor<ENTRY> {
         this.expandedDir = expandedDir;
         this.visitor = visitor;
         this.stopFlag = stopFlag;
-        this.linksStrategy = visitor.linksStrategy();
+        this.preserveLinks = visitor.linksStrategy().preserveLinks();
         this.chmod = chmod;
     }
 
@@ -74,13 +72,6 @@ public abstract class ArchiveVisitor<ENTRY> {
     abstract long getSize(ENTRY entry);
 
     abstract @Nullable ENTRY getEntry(String path);
-
-    abstract AbstractArchiveFileTreeElement<ENTRY, ? extends ArchiveVisitor<ENTRY>> createDetails(
-        ENTRY entry,
-        String targetPath,
-        ArchiveSymbolicLinkDetails<ENTRY> linkDetails,
-        boolean preserveLink
-    );
 
     abstract AbstractArchiveFileTreeElement<ENTRY, ? extends ArchiveVisitor<ENTRY>> createDetails(
         ENTRY entry,
@@ -140,28 +131,19 @@ public abstract class ArchiveVisitor<ENTRY> {
     }
 
     protected void visitEntry(ENTRY entry, String targetPath, boolean extract) {
-        if (!isSymlink(entry)) {
-            FileVisitDetails details = createDetails(entry, targetPath);
-            if (isDirectory(entry)) {
-                visitor.visitDir(details);
-            } else {
-                if (extract) {
-                    details.getFile();
-                }
-                visitor.visitFile(details);
-            }
-        } else {
-            ArchiveSymbolicLinkDetails<ENTRY> linkDetails = new ArchiveSymbolicLinkDetails<>(entry, this);
-            boolean preserveLink = linksStrategy.shouldBePreserved(linkDetails);
-            FileVisitDetails details = createDetails(entry, targetPath, linkDetails, preserveLink);
-            if (details.isDirectory()) {
-                visitor.visitDir(details);
-                ENTRY targetEntry = linkDetails.getTargetEntry();
+        AbstractArchiveFileTreeElement<ENTRY, ? extends ArchiveVisitor<ENTRY>> details = createDetails(entry, targetPath);
+        if (details.isDirectory()) {
+            visitor.visitDir(details);
+            if (!preserveLinks && details.isLink()) {
+                ENTRY targetEntry = details.getSymbolicLinkDetails().getTargetEntry();
                 String originalPath = getPath(targetEntry);
                 visitRecursively(originalPath, targetPath + '/');
-            } else {
-                visitor.visitFile(details);
             }
+        } else {
+            if (extract) {
+                details.getFile();
+            }
+            visitor.visitFile(details);
         }
     }
 

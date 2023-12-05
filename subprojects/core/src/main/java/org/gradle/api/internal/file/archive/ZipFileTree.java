@@ -181,16 +181,6 @@ public class ZipFileTree extends AbstractArchiveFileTree {
         @Override
         DetailsImpl createDetails(
             ZipArchiveEntry zipArchiveEntry,
-            String targetPath,
-            ArchiveSymbolicLinkDetails<ZipArchiveEntry> linkDetails,
-            boolean preserveLink
-        ) {
-            return new DetailsImpl(this, zipArchiveEntry, targetPath, linkDetails, preserveLink);
-        }
-
-        @Override
-        DetailsImpl createDetails(
-            ZipArchiveEntry zipArchiveEntry,
             String targetPath
         ) {
             return new DetailsImpl(this, zipArchiveEntry, targetPath);
@@ -198,16 +188,6 @@ public class ZipFileTree extends AbstractArchiveFileTree {
     }
 
     private static final class DetailsImpl extends AbstractArchiveFileTreeElement<ZipArchiveEntry, ZipVisitor> {
-
-        public DetailsImpl(
-            ZipVisitor zipMetadata,
-            ZipArchiveEntry entry,
-            String targetPath,
-            ArchiveSymbolicLinkDetails<ZipArchiveEntry> linkDetails,
-            boolean preserveLink
-        ) {
-            super(zipMetadata, entry, targetPath, linkDetails, preserveLink);
-        }
 
         public DetailsImpl(
             ZipVisitor zipMetadata,
@@ -224,15 +204,15 @@ public class ZipFileTree extends AbstractArchiveFileTree {
 
         @Override
         public InputStream open() {
-            if (!entry.isUnixSymlink() || linkDetails.targetExists()) {
+            if (!isLink() || getSymbolicLinkDetails().targetExists()) {
                 try {
-                    return archiveMetadata.zip.getInputStream(resultEntry);
+                    return archiveMetadata.zip.getInputStream(getResultEntry());
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
 
-            throw new GradleException(String.format("Couldn't follow symbolic link '%s' pointing to '%s'.", getRelativePath(), linkDetails.getTarget()));
+            throw new GradleException(String.format("Couldn't follow symbolic link '%s' pointing to '%s'.", getRelativePath(), getSymbolicLinkDetails().getTarget()));
         }
     }
 }

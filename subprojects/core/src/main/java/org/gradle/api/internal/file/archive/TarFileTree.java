@@ -378,16 +378,6 @@ public class TarFileTree extends AbstractArchiveFileTree {
         @Override
         DetailsImpl createDetails(
             TarArchiveEntry tarArchiveEntry,
-            String targetPath,
-            ArchiveSymbolicLinkDetails<TarArchiveEntry> linkDetails,
-            boolean preserveLink
-        ) {
-            return new DetailsImpl(this, tarArchiveEntry, targetPath, linkDetails, preserveLink);
-        }
-
-        @Override
-        DetailsImpl createDetails(
-            TarArchiveEntry tarArchiveEntry,
             String targetPath
         ) {
             return new DetailsImpl(this, tarArchiveEntry, targetPath);
@@ -396,16 +386,6 @@ public class TarFileTree extends AbstractArchiveFileTree {
 
     private static final class DetailsImpl extends AbstractArchiveFileTreeElement<TarArchiveEntry, TarVisitor> {
         private boolean read = false;
-
-        public DetailsImpl(
-            TarVisitor tarMetadata,
-            TarArchiveEntry entry,
-            String targetPath,
-            ArchiveSymbolicLinkDetails<TarArchiveEntry> linkDetails,
-            boolean preserveLink
-        ) {
-            super(tarMetadata, entry, targetPath, linkDetails, preserveLink);
-        }
 
         public DetailsImpl(
             TarVisitor tarMetadata,
@@ -422,19 +402,17 @@ public class TarFileTree extends AbstractArchiveFileTree {
 
         @Override
         public InputStream open() {
-            if (!entry.isSymbolicLink()) {
-                if (!read && archiveMetadata.isStreaming) {
-                    read = true;
-                    return archiveMetadata.tar;
-                }
+            if (!isLink() && !read && archiveMetadata.isStreaming) {
+                read = true;
+                return archiveMetadata.tar;
             }
 
-            if (!entry.isSymbolicLink() || linkDetails.targetExists()) {
-                File unpackedTarget = new File(archiveMetadata.expandedDir, resultEntry.getName());
+            if (!isLink() || getSymbolicLinkDetails().targetExists()) {
+                File unpackedTarget = new File(archiveMetadata.expandedDir, getResultEntry().getName());
                 return GFileUtils.openInputStream(unpackedTarget);
             }
 
-            throw new GradleException(String.format("Couldn't follow symbolic link '%s' pointing to '%s'.", getRelativePath(), linkDetails.getTarget()));
+            throw new GradleException(String.format("Couldn't follow symbolic link '%s' pointing to '%s'.", getRelativePath(), getSymbolicLinkDetails().getTarget()));
         }
     }
 
